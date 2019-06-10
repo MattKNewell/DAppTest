@@ -11,3 +11,6 @@
 #in remix...
 deploy contract in Web3 environment
 
+
+I got stuck when web3 js wasnt included in deprecated .. so this fixed it kinda
+>npm install ethereum/web3.js#develop --save --verbose

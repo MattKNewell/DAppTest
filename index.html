@@ -26,14 +26,77 @@
 
         <button id="button">Update Instructor</button>
 
+		
 
     </div>
 
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
 
     <script>
-       // Our future code here..
-    </script>
+        // var Web3 = require("web3")
+        if (typeof web3 !== 'undefined') {
+            web3 = new Web3(web3.currentProvider);
+        } else {
+            // set the provider you want from Web3.providers
+            web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+        }
+
+        web3.eth.defaultAccount = web3.eth.accounts[0];
+
+        var CoursetroContract = web3.eth.contract([
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_fName",
+				"type": "string"
+			},
+			{
+				"name": "_age",
+				"type": "uint256"
+			}
+		],
+		"name": "setInstructor",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getInstructor",
+		"outputs": [
+			{
+				"name": "",
+				"type": "string"
+			},
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	}
+]);
+
+var Coursetro = CoursetroContract.at('0x62f05c467f5aa6bd7e8f6768ab3a819e3e9a3f71');
+console.log(Coursetro);
+
+Coursetro.getInstructor(function(error,result) {
+	if(!error) {
+		$("#instructor").html(result[0]+' ('+result[1]+' years old)');
+	} else
+		console.log(error);
+});
+
+$("#button").click(function() {
+            Coursetro.setInstructor($("#name").val(), $("#age").val());
+        });
+
+</script>
 
 </body>
 </html>
