@@ -12,23 +12,26 @@
 
 </head>
 <body>
-    <div class="container">
+		<div class="container">
 
-        <h1>Coursetro Instructor</h1>
-
-        <h2 id="instructor"></h2>
-
-        <label for="name" class="col-lg-2 control-label">Instructor Name</label>
-        <input id="name" type="text">
-
-        <label for="name" class="col-lg-2 control-label">Instructor Age</label>
-        <input id="age" type="text">
-
-        <button id="button">Update Instructor</button>
-
+				<h1>King of the hill</h1>
+				<span id="countIns"></span>
 		
-
-    </div>
+				<h2 id="instructor"></h2>
+				<span id="insTrans"></span>
+				<hr>
+		
+				<img id="loader" src="https://media2.giphy.com/media/131tNuGktpXGhy/giphy.gif?cid=790b76115cfef426664371312e9b35be&rid=giphy.gif">
+		
+				<label for="fName" class="col-lg-2 control-label">First Name</label>
+				<input id="fName" type="text">
+		
+				<label for="start" class="col-lg-2 control-label">Start</label>
+				<input id="start" type="text">
+		
+				<button id="button">Update Instructor</button>
+		
+		</div>
 
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
 
@@ -43,34 +46,51 @@
 
         web3.eth.defaultAccount = web3.eth.accounts[0];
 
-        var CoursetroContract = web3.eth.contract([
+        var KingContract = web3.eth.contract([
 	{
 		"constant": false,
 		"inputs": [
 			{
-				"name": "_fName",
-				"type": "string"
+				"name": "_address",
+				"type": "address"
 			},
 			{
-				"name": "_age",
+				"name": "_start",
 				"type": "uint256"
+			},
+			{
+				"name": "_fName",
+				"type": "bytes16"
 			}
 		],
-		"name": "setInstructor",
+		"name": "setKing",
 		"outputs": [],
 		"payable": false,
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "fName",
+				"type": "bytes16"
+			},
+			{
+				"indexed": false,
+				"name": "start",
+				"type": "uint256"
+			}
+		],
+		"name": "kingInfo",
+		"type": "event"
+	},
+	{
 		"constant": true,
 		"inputs": [],
-		"name": "getInstructor",
+		"name": "countKings",
 		"outputs": [
-			{
-				"name": "",
-				"type": "string"
-			},
 			{
 				"name": "",
 				"type": "uint256"
@@ -79,22 +99,94 @@
 		"payable": false,
 		"stateMutability": "view",
 		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "_address",
+				"type": "address"
+			}
+		],
+		"name": "getKing",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"name": "",
+				"type": "bytes16"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getKings",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address[]"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "kingAccts",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
 	}
 ]);
 
-var Coursetro = CoursetroContract.at('0x62f05c467f5aa6bd7e8f6768ab3a819e3e9a3f71');
-console.log(Coursetro);
+var King = KingContract.at('0x278bd77e69c68b8110a67b5f3c9ce1c1249d2604');
 
-Coursetro.getInstructor(function(error,result) {
-	if(!error) {
-		$("#instructor").html(result[0]+' ('+result[1]+' years old)');
-	} else
-		console.log(error);
+var kingEvent = King.kingInfo({},'latest');
+
+kingEvent.watch(function (err, result) {
+    if (!err) {
+        if (result.blockHash != $("#instrans").html()) 
+            $("#loader").hide();
+            
+        $("#insTrans").html('Block hash: ' +result.blockHash);
+        $("#instructor").html(web3.toAscii(result.args.fName) + ' :' + result.args.start + ' ...)');
+    } else {
+        $("#loader").hide();
+    }
 });
 
+King.countKings((err, res) => {
+    if (res)
+        $("#countIns").html(res.c + ' Instructors'); 
+});
+
+		
 $("#button").click(function() {
-            Coursetro.setInstructor($("#name").val(), $("#age").val());
-        });
+    $("#loader").show();
+    King.setKing(web3.eth.defaultAccount, $("#start").val(), $("#fName").val(), (err, res) => {
+        if (err) 
+            $("#loader").hide();
+})
+});
 
 </script>
 
