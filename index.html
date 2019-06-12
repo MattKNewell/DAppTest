@@ -15,10 +15,11 @@
 		<div class="container">
 
 				<h1>King of the hill</h1>
-				<span id="countIns"></span>
+				<span id="countKings"></span>
+				<span id="endTime"></span>
 		
-				<h2 id="instructor"></h2>
-				<span id="insTrans"></span>
+				<h2 id="king"></h2>
+				<span id="kingTrans"></span>
 				<hr>
 		
 				<img id="loader" src="https://media2.giphy.com/media/131tNuGktpXGhy/giphy.gif?cid=790b76115cfef426664371312e9b35be&rid=giphy.gif">
@@ -29,7 +30,7 @@
 				<label for="start" class="col-lg-2 control-label">Start</label>
 				<input id="start" type="text">
 		
-				<button id="button">Update Instructor</button>
+				<button id="button">Update King</button>
 		
 		</div>
 
@@ -49,6 +50,15 @@
         var KingContract = web3.eth.contract([
 	{
 		"constant": false,
+		"inputs": [],
+		"name": "kingWin",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
 		"inputs": [
 			{
 				"name": "_address",
@@ -60,14 +70,34 @@
 			},
 			{
 				"name": "_fName",
-				"type": "bytes16"
+				"type": "string"
+			},
+			{
+				"name": "_value",
+				"type": "uint256"
 			}
 		],
 		"name": "setKing",
 		"outputs": [],
+		"payable": true,
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"name": "_timeLimit",
+				"type": "uint256"
+			}
+		],
 		"payable": false,
 		"stateMutability": "nonpayable",
-		"type": "function"
+		"type": "constructor"
+	},
+	{
+		"payable": true,
+		"stateMutability": "payable",
+		"type": "fallback"
 	},
 	{
 		"anonymous": false,
@@ -75,11 +105,16 @@
 			{
 				"indexed": false,
 				"name": "fName",
-				"type": "bytes16"
+				"type": "string"
 			},
 			{
 				"indexed": false,
 				"name": "start",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "value",
 				"type": "uint256"
 			}
 		],
@@ -90,6 +125,20 @@
 		"constant": true,
 		"inputs": [],
 		"name": "countKings",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "endTime",
 		"outputs": [
 			{
 				"name": "",
@@ -116,7 +165,7 @@
 			},
 			{
 				"name": "",
-				"type": "bytes16"
+				"type": "string"
 			}
 		],
 		"payable": false,
@@ -155,20 +204,56 @@
 		"payable": false,
 		"stateMutability": "view",
 		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "price",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "total",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
 	}
 ]);
 
-var King = KingContract.at('0x278bd77e69c68b8110a67b5f3c9ce1c1249d2604');
+var King = KingContract.at('0x82181d776c0d140d4996c851cc91f57fb6492ad1');
 
 var kingEvent = King.kingInfo({},'latest');
 
+
+function makeDeposit(){
+   var etherAmount = web3.toBigNumber($("#start").val());
+   var weiValue = web3.toWei(etherAmount,'ether');
+   King.setKing(web3.eth.accounts[0], weiValue, $("#fName").val(), weiValue, function(err, res){ });
+   }
+
 kingEvent.watch(function (err, result) {
     if (!err) {
-        if (result.blockHash != $("#instrans").html()) 
+		//web3.eth.sendTransaction({from:web3.eth.defaultAccount ,to:0x30862d97d39cef64faec5d37e919ad92ecdab02d , value:web3.toWei(0.05, "ether")}); 
+        if (result.blockHash != $("#kingtrans").html()) 
             $("#loader").hide();
             
-        $("#insTrans").html('Block hash: ' +result.blockHash);
-        $("#instructor").html(web3.toAscii(result.args.fName) + ' :' + result.args.start + ' ...)');
+        $("#kingTrans").html('Block hash: ' +result.blockHash);
+        $("#king").html(web3.toAscii(result.args.fName) + ' :' + result.args.start + result.args.endTime);
     } else {
         $("#loader").hide();
     }
@@ -176,17 +261,33 @@ kingEvent.watch(function (err, result) {
 
 King.countKings((err, res) => {
     if (res)
-        $("#countIns").html(res.c + ' Instructors'); 
+        $("#countKings").html(res.c + ' Kings'); 
 });
 
 		
 $("#button").click(function() {
-    $("#loader").show();
-    King.setKing(web3.eth.defaultAccount, $("#start").val(), $("#fName").val(), (err, res) => {
-        if (err) 
-            $("#loader").hide();
-})
-});
+	$("#loader").show();
+	
+
+	// king.setKing(web3.eth.defaultAccount, $("#start").val(), $("#fName").val(),{{from:web3.eth.accounts[0], value:web3.toWei(0.05, "ether")}},function (error, result){   if(!error){
+    //                     console.log(result);
+    //                 } else{
+    //                     console.log(error);
+    //                 }
+	// 		});
+		
+ 
+  	makeDeposit();
+   	// King.setKing(web3.eth.accounts[0], web3.toWei(0.1, "ether"), $("#fName").val(), web3.toWei(0.1, "ether"), function(err, res){ })
+    //  King.setKing(web3.eth.defaultAccount, $("#start").val(), $("#fName").val(), web3.toWei(0.1, "ether"), (err, res) => {
+
+		//let send = web3.eth.sendTransaction({value:web3.toWei(0.05, "ether")});
+// 		if (err) 
+//             $("#loader").hide();
+// })
+ });
+$("#endTime").html(endTime); 
+
 
 </script>
 
