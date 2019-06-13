@@ -1,42 +1,62 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.24;
 
 
 
-contract KingOfTheHill {
-    
-    struct King {
-        uint256 start;
-        bytes16 fName;
-        
-    }
+contract KingOfTheHill  {
+    uint timeFrame;
     
     mapping (address => King) kings;
+    
+    constructor(uint _timeFrame) public {
+        timeFrame = _timeFrame;
+    }
+    
+    struct King {
+        bytes16 fName;
+    }
+    
     address[] public kingAccts;
+    bytes16[] public nameArray;
     
     event kingInfo(
-       bytes16 fName,
-       uint256 start
+       bytes16 fName
     );
     
-    function setKing(address _address, uint _start, bytes16 _fName) public {
+     modifier isPlayable() {
+       require(now % 1 hours > 0 && now % 1 hours < timeFrame * 1 minutes);
+       _;
+   }
+   
+    function setKing(address _address, bytes16 _fName) public isPlayable(){
         var king = kings[_address];
-        king.start = _start;
         king.fName = _fName;
-        
         kingAccts.push(_address) -1;
-        kingInfo(_fName, _start);
+        nameArray.push(_fName);
+        kingInfo(_fName);
     }
     
-    function getKings() view public returns(address[]) {
-        return kingAccts;
+    function getKings() view public returns(bytes16[]) {
+        return nameArray;
     }
     
-    function getKing(address _address) view public returns (uint, bytes16) {
-        return (kings[_address].start, kings[_address].fName);
+    function getKing(address _address) view public returns (bytes16) {
+        return (kings[_address].fName);
     }
     
     function countKings() view public returns (uint) {
         return kingAccts.length;
     }
     
+    function isplay() public view returns (uint) {
+       if(now % 1 hours > 0 && now % 1 hours < timeFrame * 1 minutes)
+           return 1;
+       else
+           return 0;
+   }
+   
+   function whoIsKing() public view returns(bytes16){
+       uint256 index = kingAccts.length -1;
+       address lastAddress = kingAccts[index];
+       return getKing(lastAddress);
+   }
 }
