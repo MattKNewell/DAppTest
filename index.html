@@ -16,9 +16,12 @@
 
 				<h1>King of the hill</h1>
 				<span id="countKings"></span>
-				<span id="endTime"></span>
 		
 				<h2 id="king"></h2>
+				<h2 id="kingName"></h2>
+				<hr>
+				
+				The game is currently <span id="isplay"></span>
 				<span id="kingTrans"></span>
 				<hr>
 		
@@ -27,10 +30,10 @@
 				<label for="fName" class="col-lg-2 control-label">First Name</label>
 				<input id="fName" type="text">
 		
-				<label for="start" class="col-lg-2 control-label">Start</label>
-				<input id="start" type="text">
-		
-				<button id="button">Update King</button>
+				<button id="button">Add King</button>
+				<br>
+				<h2>Prior Lords</h2>	
+				<span id="kingHistoy"></span>
 		
 		</div>
 
@@ -50,43 +53,26 @@
         var KingContract = web3.eth.contract([
 	{
 		"constant": false,
-		"inputs": [],
-		"name": "kingWin",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": false,
 		"inputs": [
 			{
 				"name": "_address",
 				"type": "address"
 			},
 			{
-				"name": "_start",
-				"type": "uint256"
-			},
-			{
 				"name": "_fName",
-				"type": "string"
-			},
-			{
-				"name": "_value",
-				"type": "uint256"
+				"type": "bytes16"
 			}
 		],
 		"name": "setKing",
 		"outputs": [],
-		"payable": true,
-		"stateMutability": "payable",
+		"payable": false,
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
 		"inputs": [
 			{
-				"name": "_timeLimit",
+				"name": "_timeFrame",
 				"type": "uint256"
 			}
 		],
@@ -95,27 +81,12 @@
 		"type": "constructor"
 	},
 	{
-		"payable": true,
-		"stateMutability": "payable",
-		"type": "fallback"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
 			{
 				"indexed": false,
 				"name": "fName",
-				"type": "string"
-			},
-			{
-				"indexed": false,
-				"name": "start",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"name": "value",
-				"type": "uint256"
+				"type": "bytes16"
 			}
 		],
 		"name": "kingInfo",
@@ -125,20 +96,6 @@
 		"constant": true,
 		"inputs": [],
 		"name": "countKings",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "endTime",
 		"outputs": [
 			{
 				"name": "",
@@ -161,11 +118,7 @@
 		"outputs": [
 			{
 				"name": "",
-				"type": "uint256"
-			},
-			{
-				"name": "",
-				"type": "string"
+				"type": "bytes16"
 			}
 		],
 		"payable": false,
@@ -179,7 +132,21 @@
 		"outputs": [
 			{
 				"name": "",
-				"type": "address[]"
+				"type": "bytes16[]"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "isplay",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"payable": false,
@@ -207,12 +174,17 @@
 	},
 	{
 		"constant": true,
-		"inputs": [],
-		"name": "price",
-		"outputs": [
+		"inputs": [
 			{
 				"name": "",
 				"type": "uint256"
+			}
+		],
+		"name": "nameArray",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bytes16"
 			}
 		],
 		"payable": false,
@@ -222,11 +194,11 @@
 	{
 		"constant": true,
 		"inputs": [],
-		"name": "total",
+		"name": "whoIsKing",
 		"outputs": [
 			{
 				"name": "",
-				"type": "uint256"
+				"type": "bytes16"
 			}
 		],
 		"payable": false,
@@ -235,59 +207,89 @@
 	}
 ]);
 
-var King = KingContract.at('0x82181d776c0d140d4996c851cc91f57fb6492ad1');
+var King = KingContract.at('0xec8313fcec43aa01b046c590a07f567af8fde95e');
 
 var kingEvent = King.kingInfo({},'latest');
-
-
-function makeDeposit(){
-   var etherAmount = web3.toBigNumber($("#start").val());
-   var weiValue = web3.toWei(etherAmount,'ether');
-   King.setKing(web3.eth.accounts[0], weiValue, $("#fName").val(), weiValue, function(err, res){ });
-   }
+var kingName;
 
 kingEvent.watch(function (err, result) {
     if (!err) {
-		//web3.eth.sendTransaction({from:web3.eth.defaultAccount ,to:0x30862d97d39cef64faec5d37e919ad92ecdab02d , value:web3.toWei(0.05, "ether")}); 
+ 
         if (result.blockHash != $("#kingtrans").html()) 
             $("#loader").hide();
             
         $("#kingTrans").html('Block hash: ' +result.blockHash);
-        $("#king").html(web3.toAscii(result.args.fName) + ' :' + result.args.start + result.args.endTime);
+        $("#king").html(web3.toAscii(result.args.fName));
     } else {
         $("#loader").hide();
     }
 });
 
+// View Functions
 King.countKings((err, res) => {
-    if (res)
-        $("#countKings").html(res.c + ' Kings'); 
+	if (res){
+		console.log('Kings:' + res)
+		$("#countKings").html(res.c + ' Kings'); 
+}
 });
 
-		
-$("#button").click(function() {
-	$("#loader").show();
+King.whoIsKing((err, res) => {
+	if (res){
+		console.log('who is king:' + hex2a(res))
+		$("#kingName").html(hex2a(res) + ' is King'); 
+	}
+});
+
+King.getKings((err, res) => {
+
+	for(var i = 0; i < res.length;i++){
+		if (res[i]){
+			console.log('Prior Lords:' + hex2a(res[i]));
+			$("#kingHistoy").append("<br>" + hex2a(res[i])); 
+		}
+	}
 	
+});
 
-	// king.setKing(web3.eth.defaultAccount, $("#start").val(), $("#fName").val(),{{from:web3.eth.accounts[0], value:web3.toWei(0.05, "ether")}},function (error, result){   if(!error){
-    //                     console.log(result);
-    //                 } else{
-    //                     console.log(error);
-    //                 }
-	// 		});
+King.isplay((err, res) => {
+    if (res == 1){
+		console.log("Isplay:" + res);
 		
- 
+		$("#isplay").html("Playable"); 
+		changeBackground('green');
+	}else{
+		console.log("Not Playable");
+		$("#isplay").html('Not Playable'); 
+		changeBackground('red');
+	}
+});
+// End of View Functions
+
+function changeBackground(color) {
+   document.body.style.background = color;
+}
+
+// Button to Become a King
+$("#button").click(function() {
+	console.log("Update");
+	$("#loader").show();
   	makeDeposit();
-   	// King.setKing(web3.eth.accounts[0], web3.toWei(0.1, "ether"), $("#fName").val(), web3.toWei(0.1, "ether"), function(err, res){ })
-    //  King.setKing(web3.eth.defaultAccount, $("#start").val(), $("#fName").val(), web3.toWei(0.1, "ether"), (err, res) => {
-
-		//let send = web3.eth.sendTransaction({value:web3.toWei(0.05, "ether")});
-// 		if (err) 
-//             $("#loader").hide();
-// })
  });
-$("#endTime").html(endTime); 
 
+ function makeDeposit(){
+   var etherAmount = web3.toBigNumber($("#start").val());
+   var weiValue = web3.toWei(etherAmount,'ether');
+   King.setKing(web3.eth.accounts[0], $("#fName").val(), function(err, res){ });
+}
+
+ // a2hex used from https://stackoverflow.com/questions/3745666/how-to-convert-from-hex-to-ascii-in-javascript
+ function hex2a(hexx) {
+    var hex = hexx.toString();//force conversion
+    var str = '';
+    for (var i = 0; (i < hex.length && hex.substr(i, 2) !== '00'); i += 2)
+        str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+    return str;
+}
 
 </script>
 
