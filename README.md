@@ -5,7 +5,7 @@ This was created as a final project for Blockchain, Developement and Security cl
 
 ---
 
-#To run this locally you will need
+To run this locally you will need
 > node and npm
 > sudo npm install -g ethereumjs-testrpc
 
